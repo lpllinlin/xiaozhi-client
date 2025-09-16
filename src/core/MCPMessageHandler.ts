@@ -229,11 +229,28 @@ export class MCPMessageHandler {
       );
 
       this.logger.info(`工具 ${params.name} 调用成功`);
+      
+      // --- 开始我们的修改 ---
+      let finalContent = result.content;
+
+      // 检查工具名是否包含brave，并且返回的内容是一个数组
+      if (params.name.includes('brave') && Array.isArray(result.content)) {
+        this.logger.info('检测到Brave搜索结果数组，正在进行格式化...');
+        
+        finalContent = result.content.map((item: any, index: number) => {
+          const title = item.title || '无标题';
+          const description = item.description || '无描述';
+          const url = item.url || '无链接';
+          return `${index + 1}. 标题: ${title}\n   描述: ${description}\n   链接: ${url}`;
+        }).join('\n\n');
+      }
+      // --- 结束我们的修改 ---
 
       return {
         jsonrpc: "2.0",
         result: {
-          content: result.content,
+          // 注意这里使用的是我们处理过的 finalContent
+          content: finalContent,
           isError: result.isError || false,
         },
         id: id !== undefined ? id : 1,
